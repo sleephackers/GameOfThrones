@@ -2,35 +2,24 @@ package com.example.android.got;
 
 import android.content.ContentValues;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.ImageView;
-import android.widget.SearchView;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import com.example.android.got.Character.CharacterResponse;
 import com.example.android.got.Character.Data;
 import com.example.android.got.RetrofitCalls.ApiClient;
 import com.example.android.got.RetrofitCalls.ApiInterface;
 import com.example.android.got.data.GotContract;
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import com.squareup.picasso.Picasso;
-
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import retrofit2.http.Body;
 
 public class SearchCharacterActivity extends AppCompatActivity {
     String name;
@@ -45,7 +34,6 @@ public class SearchCharacterActivity extends AppCompatActivity {
     String booksText="";
     String titlesText="";
     String imageViewText;
-    ArrayList<String> characters;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,7 +48,6 @@ public class SearchCharacterActivity extends AppCompatActivity {
         titles=findViewById(R.id.titles);
         Bundle extras = getIntent().getExtras();
         name = extras.getString("character");
-        loadData();
         fetchCharacter();
 
     }
@@ -71,7 +58,9 @@ public class SearchCharacterActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<CharacterResponse> call, Response<CharacterResponse> response) {
                Log.e(SearchCharacterActivity.class.getSimpleName(),"STATUS: "+response.code());
-                if(response.body().getMessage().equals("Success"))
+                if (response.body() == null)
+                    cname.setText("COUDNT FIND THE CHARACTER");
+                else
                {
                    Data character=response.body().getData();
                    imageViewText="https://api.got.show"+character.getImageLink();
@@ -81,22 +70,30 @@ public class SearchCharacterActivity extends AppCompatActivity {
                        gender.setText("Male");
                    else
                        gender.setText("Female");
-                   culture.setText(character.getCulture());
-                   house.setText(character.getHouse());
+                   {
+                       if (character.getCulture() == null)
+                           culture.setText("No Info Available");
+                       else
+                           culture.setText(character.getCulture());
+                   }
+                   if (house == null)
+                       house.setText("No Info Available");
+                   else
+                       house.setText(character.getHouse());
                    for(int i=0;i<character.getBooks().size();i++)
                    {booksText+=character.getBooks().get(i);
                     booksText+="\n";}
                    books.setText(booksText);
-                   if(character.getTitles().isEmpty())
-                       titles.setText("NO TITLE");
+                   if(character.getTitles().isEmpty()) {
+                       titles.setText("No Title");
+                       titlesText = "No Title";
+                   }
                    else
                        { for(int j=0;j<character.getTitles().size();j++)
                    {titlesText+=character.getTitles().get(j);titlesText+="\n";}
                    titles.setText(titlesText);}
-                   characters.add(character.getName());
                    saveCharacter();
                }
-               else cname.setText(response.body().getMessage());
 
             }
 
@@ -130,7 +127,6 @@ public class SearchCharacterActivity extends AppCompatActivity {
 
 
         Uri newUri = getContentResolver().insert(GotContract.GotEntry.CONTENT_URI, values);
-
         if (newUri == null) {
             Toast.makeText(this, "SEARCH RESULT WASNT SAVED",
                     Toast.LENGTH_SHORT).show();
@@ -138,7 +134,6 @@ public class SearchCharacterActivity extends AppCompatActivity {
             {
                 Toast.makeText(this, "SEARCH RESULT SAVED",
                         Toast.LENGTH_SHORT).show();
-                saveData();
             }
         }
     }
@@ -169,25 +164,11 @@ public class SearchCharacterActivity extends AppCompatActivity {
         super.onPrepareOptionsMenu(menu);
         return true;
     }
-    private void saveData() {
-        SharedPreferences sharedPreferences = getSharedPreferences("shared preferences", MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        Gson gson = new Gson();
-        String json = gson.toJson(characters);
-        editor.putString("Name list", json);
-        editor.apply();
+
+    @Override
+    public void onBackPressed() {
+        Intent intent = new Intent(SearchCharacterActivity.this, MainActivity.class);
+        startActivity(intent);
     }
 
-    private void loadData() {
-        SharedPreferences sharedPreferences = getSharedPreferences("shared preferences", MODE_PRIVATE);
-        Gson gson = new Gson();
-        String json = sharedPreferences.getString("Name list", null);
-        Type type = new TypeToken<ArrayList<String>>() {
-        }.getType();
-        characters = gson.fromJson(json, type);
-        if (characters == null) {
-            characters = new ArrayList<>();
-        }
-
-    }
 }

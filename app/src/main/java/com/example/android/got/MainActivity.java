@@ -1,65 +1,55 @@
 package com.example.android.got;
 
-import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.ContentUris;
-import android.content.CursorLoader;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.Loader;
-import android.content.SharedPreferences;
-import android.database.Cursor;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
-import android.support.annotation.NonNull;
-import android.support.v4.app.LoaderManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.BaseAdapter;
-import android.widget.FilterQueryProvider;
 import android.widget.ListView;
 import android.widget.SearchView;
-import android.widget.TextView;
 import android.widget.Toast;
-
 import com.example.android.got.data.GotContract;
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-
-import java.lang.reflect.Type;
+import com.example.android.got.data.GotDbHelper;
 import java.util.ArrayList;
 
-public class MainActivity extends AppCompatActivity/* implements android.app.LoaderManager.LoaderCallbacks<Cursor>*/ {
-    private static final int CHARACTER_LOADER = 0;
-    GotCursorAdapter mCursorAdapter;
+public class MainActivity extends AppCompatActivity {
+    baseAdapter mAdapter;
     ListView characterList;
+    GotDbHelper dbHelper;
     int textlength;
+    NetworkInfo networkInfo;
     ArrayList<String> characters,array_sort;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        array_sort=new ArrayList<>();
         characters=new ArrayList<>();
-        loadData();
+        array_sort = new ArrayList<>();
+        dbHelper = new GotDbHelper(this);
         characterList = (ListView) findViewById(R.id.SearchHistory);
-        baseAdapter adapter = new baseAdapter(this, characters);
-
-        characterList.setAdapter(adapter);
-
+        View emptyView = findViewById(R.id.empty_view);
+        characterList.setEmptyView(emptyView);
+        ConnectivityManager connMgr = (ConnectivityManager)
+                getSystemService(Context.CONNECTIVITY_SERVICE);
+        networkInfo = connMgr.getActiveNetworkInfo();
+        refreshSearch();
         characterList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
-                final Uri currentUri = ContentUris.withAppendedId(GotContract.GotEntry.CONTENT_URI, id);
+                final Uri currentUri = ContentUris.withAppendedId(GotContract.GotEntry.CONTENT_URI, dbHelper.getCharId(characters.get(position)));
                 Intent intent = new Intent(MainActivity.this, SearchHistoryCharacterInfo.class);
                 intent.setData(currentUri);
                 startActivity(intent);
+                refreshSearch();
 
             }
         });
@@ -76,30 +66,45 @@ public class MainActivity extends AppCompatActivity/* implements android.app.Loa
             @Override
             public boolean onQueryTextSubmit(String query)
             {
-                Intent intent = new Intent(MainActivity.this, SearchCharacterActivity.class);
-                Bundle extras = new Bundle();
-                extras.putString("character", query);
-                intent.putExtras(extras);
-                startActivity(intent);
+                boolean recordExists = dbHelper.checkIfRecordExist(query);
+                if (recordExists) {
+                    final Uri currentUri = ContentUris.withAppendedId(GotContract.GotEntry.CONTENT_URI, dbHelper.getCharId(query));
+                    Intent intent = new Intent(MainActivity.this, SearchHistoryCharacterInfo.class);
+                    intent.setData(currentUri);
+                    startActivity(intent);
+                } else {
+                    if (networkInfo != null && networkInfo.isConnected()) {
+                        Intent intent = new Intent(MainActivity.this, SearchCharacterActivity.class);
+                        Bundle extras = new Bundle();
+                        extras.putString("character", query);
+                        intent.putExtras(extras);
+                        startActivity(intent);
+                    } else
+                        Toast.makeText(MainActivity.this, "CHECK YOUR NETWORK CONNECTIVITY",
+                                Toast.LENGTH_SHORT).show();
+                }
+                refreshSearch();
                 return false;
             }
 
             @Override
             public boolean onQueryTextChange(String newText)
             {
-                textlength = newText.length();
+                if (characters == null) ;
+                else {
+                    textlength = newText.length();
                 if(!array_sort.isEmpty())
-                     array_sort.clear();
+                    array_sort.clear();
                 for (int i = 0; i < characters.size(); i++) {
                     if (textlength <= characters.get(i).length()) {
                         if (characters.get(i).toLowerCase().contains(
-                               newText.toLowerCase().trim()))
-                        {
+                                newText.toLowerCase().trim())) {
                             array_sort.add(characters.get(i));
                         }
                     }
                 }
-                AppendList(array_sort);
+                    AppendList(array_sort);
+                }
 
                 return false;
             }
@@ -123,24 +128,41 @@ public class MainActivity extends AppCompatActivity/* implements android.app.Loa
         super.onPrepareOptionsMenu(menu);
         return true;
     }
-    private void loadData() {
-        SharedPreferences sharedPreferences = getSharedPreferences("shared preferences", MODE_PRIVATE);
-        Gson gson = new Gson();
-        String json = sharedPreferences.getString("Name list", null);
-        Type type = new TypeToken<ArrayList<String>>() {
-        }.getType();
-        characters = gson.fromJson(json, type);
-        if (characters == null) {
-            characters = new ArrayList<>();
-        }
 
-    }
     public void AppendList(ArrayList<String> str)
     {
         baseAdapter adapter = new baseAdapter(this, str);
 
         characterList.setAdapter(adapter);
     }
+
+    public void refreshSearch() {
+        characters = dbHelper.getNames();
+        if (characters == null)
+            mAdapter = new baseAdapter(this);
+        else
+            mAdapter = new baseAdapter(this, characters);
+        characterList.setAdapter(mAdapter);
+
+    }
+
+    @Override
+    public void onBackPressed() {
+        new AlertDialog.Builder(this)
+                .setIcon(android.R.drawable.ic_dialog_alert)
+                .setTitle("Closing Application")
+                .setMessage("Are you sure you want to close application?")
+                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        finish();
+                    }
+
+                })
+                .setNegativeButton("No", null)
+                .show();
+    }
+
 
 
 }

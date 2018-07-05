@@ -15,6 +15,9 @@ public class baseAdapter extends ArrayAdapter<String> {
         super(context, 0, words);
     }
 
+    public baseAdapter(Context context) {
+        super(context, 0);
+    }
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         View listItemView = convertView;

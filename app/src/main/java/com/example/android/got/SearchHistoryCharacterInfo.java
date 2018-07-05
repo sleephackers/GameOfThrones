@@ -6,10 +6,12 @@ import android.content.CursorLoader;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.Loader;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -19,7 +21,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.android.got.data.GotContract;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.squareup.picasso.Picasso;
+
+import java.lang.reflect.Type;
+import java.util.ArrayList;
 
 public class SearchHistoryCharacterInfo extends AppCompatActivity implements
         LoaderManager.LoaderCallbacks<Cursor> {
@@ -41,7 +48,6 @@ public class SearchHistoryCharacterInfo extends AppCompatActivity implements
         setContentView(R.layout.activity_search_character);
         Intent intent = getIntent();
         mCurrentUri = intent.getData();
-
         imageView=findViewById(R.id.image);
         cname=findViewById(R.id.name);
         gender=findViewById(R.id.gender);
@@ -83,7 +89,6 @@ public class SearchHistoryCharacterInfo extends AppCompatActivity implements
                 GotContract.GotEntry.COLUMN_BOOKS,
                 GotContract.GotEntry.COLUMN_TITLES,
         };
-
         return new CursorLoader(this,   // Parent activity context
                 mCurrentUri,         // Query the content URI for the current character
                 projection,             // Columns to include in the resulting Cursor
@@ -177,9 +182,20 @@ public class SearchHistoryCharacterInfo extends AppCompatActivity implements
             } else {
                 Toast.makeText(this, "Search history deleted",
                         Toast.LENGTH_SHORT).show();
+
             }
+            Intent intent = new Intent(SearchHistoryCharacterInfo.this, MainActivity.class);
+            startActivity(intent);
             finish();
 
         }
     }
+
+    @Override
+    public void onBackPressed() {
+        Intent intent = new Intent(SearchHistoryCharacterInfo.this, MainActivity.class);
+        startActivity(intent);
+    }
+
+
 }

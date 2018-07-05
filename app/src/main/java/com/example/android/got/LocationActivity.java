@@ -1,6 +1,7 @@
 
 package com.example.android.got;
 
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -62,5 +63,11 @@ public class LocationActivity extends AppCompatActivity {
                 Log.e(LocationActivity.class.getSimpleName(), t.toString());
             }
         });
+    }
+
+    @Override
+    public void onBackPressed() {
+        Intent intent = new Intent(LocationActivity.this, MainActivity.class);
+        startActivity(intent);
     }
 }
