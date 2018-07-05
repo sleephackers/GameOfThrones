@@ -3,10 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
-        android:id="@+id/menuSearch"
-        android:title="Search"
-        android:icon="@drawable/searchicon"
-        app:actionViewClass="android.widget.SearchView"
+        android:id="@+id/delete"
+        android:title="Delete Search"
         app:showAsAction="always" />
 
 </menu>
