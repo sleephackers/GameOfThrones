@@ -73,15 +73,13 @@ public class MainActivity extends AppCompatActivity {
                     intent.setData(currentUri);
                     startActivity(intent);
                 } else {
-                    if (networkInfo != null && networkInfo.isConnected()) {
                         Intent intent = new Intent(MainActivity.this, SearchCharacterActivity.class);
                         Bundle extras = new Bundle();
                         extras.putString("character", query);
                         intent.putExtras(extras);
-                        startActivity(intent);
-                    } else
-                        Toast.makeText(MainActivity.this, "CHECK YOUR NETWORK CONNECTIVITY",
-                                Toast.LENGTH_SHORT).show();
+
+                    startActivity(intent);
+
                 }
                 refreshSearch();
                 return false;

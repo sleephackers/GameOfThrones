@@ -19,6 +19,7 @@
 
     <LinearLayout
         android:layout_width="match_parent"
+        android:id="@+id/llname"
         android:layout_height="0dp"
         android:layout_weight="1">
 
@@ -39,6 +40,7 @@
 
     <LinearLayout
         android:layout_width="match_parent"
+        android:id="@+id/llgender"
         android:layout_height="0dp"
         android:layout_weight="1">
 
@@ -59,6 +61,7 @@
 
     <LinearLayout
         android:layout_width="match_parent"
+        android:id="@+id/llculture"
         android:layout_height="0dp"
         android:layout_weight="1">
 
@@ -79,6 +82,7 @@
 
     <LinearLayout
         android:layout_width="match_parent"
+        android:id="@+id/llhouse"
         android:layout_height="0dp"
         android:layout_weight="1">
 
@@ -99,6 +103,7 @@
 
     <LinearLayout
         android:layout_width="match_parent"
+        android:id="@+id/llbooks"
         android:layout_height="0dp"
         android:layout_weight="3">
 
@@ -119,6 +124,7 @@
 
     <LinearLayout
         android:layout_width="match_parent"
+        android:id="@+id/lltitles"
         android:layout_height="0dp"
         android:layout_weight="3">
 

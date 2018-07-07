@@ -1,14 +1,19 @@
 package com.example.android.got;
 
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.example.android.got.Character.CharacterResponse;
@@ -34,10 +39,23 @@ public class SearchCharacterActivity extends AppCompatActivity {
     String booksText="";
     String titlesText="";
     String imageViewText;
+    Boolean result = true;
+    LinearLayout l1, l2, l3, l4, l5, l6;
+    NetworkInfo networkInfo;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        ConnectivityManager connMgr = (ConnectivityManager)
+                getSystemService(Context.CONNECTIVITY_SERVICE);
+        networkInfo = connMgr.getActiveNetworkInfo();
+        if (networkInfo != null && networkInfo.isConnected()) ;
+        else {
+            Toast.makeText(SearchCharacterActivity.this, "CHECK YOUR NETWORK CONNECTIVITY",
+                    Toast.LENGTH_SHORT).show();
+            finish();
+        }
         setContentView(R.layout.activity_search_character);
         imageView=findViewById(R.id.image);
         cname=findViewById(R.id.name);
@@ -46,6 +64,12 @@ public class SearchCharacterActivity extends AppCompatActivity {
         house=findViewById(R.id.house);
         books=findViewById(R.id.books);
         titles=findViewById(R.id.titles);
+        l1 = findViewById(R.id.llname);
+        l2 = findViewById(R.id.llgender);
+        l3 = findViewById(R.id.llculture);
+        l4 = findViewById(R.id.llhouse);
+        l5 = findViewById(R.id.llbooks);
+        l6 = findViewById(R.id.lltitles);
         Bundle extras = getIntent().getExtras();
         name = extras.getString("character");
         fetchCharacter();
@@ -58,8 +82,17 @@ public class SearchCharacterActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<CharacterResponse> call, Response<CharacterResponse> response) {
                Log.e(SearchCharacterActivity.class.getSimpleName(),"STATUS: "+response.code());
-                if (response.body() == null)
-                    cname.setText("COUDNT FIND THE CHARACTER");
+                if (response.body() == null) {
+                    l1.setVisibility(View.INVISIBLE);
+                    l2.setVisibility(View.INVISIBLE);
+                    l3.setVisibility(View.INVISIBLE);
+                    l4.setVisibility(View.INVISIBLE);
+                    l5.setVisibility(View.INVISIBLE);
+                    l6.setVisibility(View.INVISIBLE);
+
+                    result = false;
+                }
+
                 else
                {
                    Data character=response.body().getData();
@@ -149,11 +182,16 @@ public class SearchCharacterActivity extends AppCompatActivity {
         switch (item.getItemId()) {
 
             case R.id.searchLocation:
-                Intent intent = new Intent(SearchCharacterActivity.this, LocationActivity.class);
-                Bundle extras = new Bundle();
-                extras.putString("character",name );
-                intent.putExtras(extras);
-                startActivity(intent);
+                if (!result)
+                    Toast.makeText(SearchCharacterActivity.this, "INVALID CHARACTER SEARCH",
+                            Toast.LENGTH_SHORT).show();
+                else {
+                    Intent intent = new Intent(SearchCharacterActivity.this, LocationActivity.class);
+                    Bundle extras = new Bundle();
+                    extras.putString("character", name);
+                    intent.putExtras(extras);
+                    startActivity(intent);
+                }
 
         }
         return super.onOptionsItemSelected(item);

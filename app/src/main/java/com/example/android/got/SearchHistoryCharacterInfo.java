@@ -2,12 +2,15 @@ package com.example.android.got;
 
 import android.app.AlertDialog;
 import android.app.LoaderManager;
+import android.content.Context;
 import android.content.CursorLoader;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.Loader;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -121,9 +124,16 @@ public class SearchHistoryCharacterInfo extends AppCompatActivity implements
             String houses = cursor.getString(houseci);
             String bookss = cursor.getString(booksci);
             String titless = cursor.getString(titlesci);
+            ConnectivityManager connMgr = (ConnectivityManager)
+                    getSystemService(Context.CONNECTIVITY_SERVICE);
+            NetworkInfo networkInfo;
 
+            networkInfo = connMgr.getActiveNetworkInfo();
             // Update the views on the screen with the values from the database
-            Picasso.get().load(images).resize(800, 800).into(imageView);
+            if (networkInfo != null && networkInfo.isConnected())
+                Picasso.get().load(images).resize(800, 800).into(imageView);
+            else
+                imageView.setImageResource(R.drawable.imagedb);
 
             cname.setText(names);
             gender.setText(genders);
